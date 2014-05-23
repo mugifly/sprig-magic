@@ -1,0 +1,52 @@
+% layout 'default';
+% title 'Users';
+<h1>Control Panel</h1>
+<h2>Users</h2>
+<div class="row">
+	<div class="col-md-12">
+		<table class="table">
+			<tr>
+				<th>ID</th><th>OA.Service</th><th>OA.ID</th><th>Status</th><th>Last login</th><th>Action</th>
+			</tr>
+			<% foreach my $user (@{&stash('users')}) { %>
+				<tr>
+					<td><%= $user->{id} %></td>
+					<td><%= $user->{oauth_service} %></td>
+					<td><%= $user->{oauth_id} %></td>
+					<td>
+						<% if ($user->{status} == 10) { %>
+							<span class="label label-danger">Admin</span>
+						<% } elsif ($user->{status} == 1) { %>
+							<span class="label label-success">General</span>
+						<% } elsif ($user->{status} == 0) { %>
+							<span class="label label-warning">Unactive</span>
+						<% } elsif ($user->{status} == -1) { %>
+							<span class="label label-default">Disabled</span>
+						<% } else { %>
+							<%= $user->{status} %>
+						<% } %>
+					</td>
+					<td><%= $user->{last_logged_in_at} %></td>
+					<td>
+						<% if (stash('user_id') eq $user->{id}) { %>
+							- <!-- Your self -->
+						<% } else { %>
+							<% if ($user->{status} == 10) { %>
+								<a href="<%= url_for('/admin/users?action=status&user_id='.$user->{id}.'&status=1') %>" class="btn btn-default btn-xs">Demote</a>
+							<% } elsif ($user->{status} == 1) { %>
+								<a href="<%= url_for('/admin/users?action=status&user_id='.$user->{id}.'&status=10') %>" class="btn btn-success btn-xs">Raise</a>
+								<a href="<%= url_for('/admin/users?action=status&user_id='.$user->{id}.'&status=-1') %>" class="btn btn-default btn-xs">Disable</a>
+							<% } elsif ($user->{status} == 0) { %>
+								<a href="<%= url_for('/admin/users?action=status&user_id='.$user->{id}.'&status=1') %>" class="btn btn-success btn-xs">Activate</a>
+							<% } elsif ($user->{status} == -1) { %>
+								<a href="<%= url_for('/admin/users?action=status&user_id='.$user->{id}.'&status=1') %>" class="btn btn-default btn-xs">Revival</a>
+							<% } %>
+													
+							<a href="<%= url_for('/admin/users?action=delete&user_id='.$user->{id}) %>" class="btn btn-danger btn-xs">Delete</a>
+						<% } %>
+					</td>
+				</tr>
+			<% } %>
+		</table>
+	</div>
+</div>

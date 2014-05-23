@@ -1,0 +1,5 @@
+server/*.db
+server/local/
+server/config/sprig_magic.development.conf
+server/config/sprig_magic.production.conf
+server/log/

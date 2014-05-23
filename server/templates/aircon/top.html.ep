@@ -1,0 +1,40 @@
+% layout 'default';
+% title 'Aircon';
+<script type="text/javascript">
+	$(function(){
+		$('#switch_power').bootstrapSwitch()
+			.on('switchChange.bootstrapSwitch', function(event, state) {
+				// Turn on/off
+				angular.element(event.target).scope().setPower(state);
+		});
+	});
+</script>
+<h1>Air-con.</h1>
+<div class="row" ng-controller="AirconCtrl"> <!--Controller is AirconCtrl of app.js-->
+	<div class="alert alert-danger" ng-show="error_text != null">
+		<b>エラー</b><br />
+		{{error_text}}
+	</div>
+	<div class="col-md-4">
+		<h3>電源</h3>
+		<p>
+			<input type="checkbox" id="switch_power" ng-model="power" ng-checked="power == true"><br/>
+			<small>Brightness sensor: {{power_brightness_sensor_value}}</small>
+		</p>
+	</div>
+	<div class="col-md-4">
+		<h3>設定温度</h3>
+		<p>
+			<select class="form-control" ng-model="temperature_set" ng-change="setTemperature(temperature_set);">
+				<option ng-repeat="temp in temperatures" value="{{temp.value}}">{{temp.label}}</option>
+			</select>
+		</p>
+	</div>
+
+	<div class="col-md-4">
+		<h3>現在温度</h3>
+		<p>
+			{{temperature_real}} ℃
+		</p>
+	</div>
+</div>

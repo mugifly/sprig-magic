@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+	<meta charset="utf-8">
+	<title><%= $title %> - sprig::magic</title>
+	<meta name="viewport" content="width=device-width, initial-scale=1">
+	<!--Libraries-->
+	<link rel="stylesheet" href="/style/bootstrap.min.css" media="screen">
+	<link rel="stylesheet" href="/style/bootstrap-switch.min.css" media="screen">
+	<link rel="stylesheet" href="/style/font-awesome.min.css">
+	<script src="/js/jquery-1.11.1.min.js"></script>
+	<script src="/js/angular.min.js"></script>
+	<script src="/js/bootstrap.min.js"></script>
+	<script src="/js/bootstrap-switch.min.js"></script>
+	<!--App (AngularJS)-->
+	<script src="/js/app.js"></script>
+	<!---->
+</head>
+<body ng-app="myApp">
+	<div class="navbar navbar-default navbar-fixed-top">
+		<div class="container">
+			<div class="navbar-header">
+				<a href="<%= url_for ('/') %>" class="navbar-brand">sprig::magic</a>
+				<button class="navbar-toggle" type="button" data-toggle="collapse" data-target="#navbar-main">
+					<span class="icon-bar"></span>
+					<span class="icon-bar"></span>
+					<span class="icon-bar"></span>
+				</button>
+			</div>
+			<div class="navbar-collapse collapse" id="navbar-main">
+				<ul class="nav navbar-nav">
+					<li <% if ($self->current_route eq '' || $self->current_route =~ /^(top|dashboard).*/) { %>class="active"<% } %>>
+						<a href="<%= url_for ('/') %>">Top</a>
+					</li>
+					<li <% if ($self->current_route =~ /^aircon.*/) { %>class="active"<% } %>>
+						<a href="<%= url_for ('/aircon') %>">Aircon</a>
+					</li>
+				</ul>
+
+				<ul class="nav navbar-nav navbar-right">
+					<li class="dropdown">
+						<% if (defined stash('user_id')) { %>
+							<a class="dropdown-toggle" data-toggle="dropdown" href="#" id="usermenu"><%= stash('user')->{oauth_id} %> <span class="caret"></span></a>
+							<ul class="dropdown-menu" aria-labelledby="usermenu">
+								<li><a href="<%= url_for ('/admin') %>"><i class="fa-cog"></i>&nbsp;コントロールパネル</a></li>
+								<li><a href="<%= url_for ('/session/logout') %>"><i class="fa-sign-out"></i>&nbsp;ログアウト</a></li>
+							</ul>
+						<% } else { %>
+							<a class="dropdown-toggle" data-toggle="dropdown" href="#" id="usermenu">ログイン <span class="caret"></span></a>
+							<ul class="dropdown-menu" aria-labelledby="usermenu">
+								<li><a href="<%= url_for ('/session/oauth_google_redirect') %>"><i class="fa-sign-in"></i>&nbsp;ログイン</a></li>
+							</ul>
+						<% } %>
+					</li>
+				</ul>
+			</div>
+		</div>
+	</div>
+
+	<div class="container" style="margin-top: 50px;">
+		<% if (defined flash('message_error')) { %>
+			<div class="alert alert-danger">
+				<b>エラー:</b>&nbsp;<%= flash('message_error') %>
+			</div>
+		<% } %>
+
+		<%= content %>
+
+		<footer style="margin-top: 5%;">
+			<div class="row">
+				<div class="col-lg-12">
+					<p style="font-size: 0.8rem;">
+						The sprig::magic project; maintained by <a href="http://ohgita.info/">Masanori Ohgita (mugifly)</a>.<br/>
+						Designed by <a href="http://thomaspark.me" rel="nofollow">Thomas Park</a>.
+						Based on <a href="http://getbootstrap.com" rel="nofollow">Bootstrap</a>.
+						Icons from <a href="http://fortawesome.github.io/Font-Awesome/" rel="nofollow">Font Awesome</a>.
+						Web fonts from <a href="http://www.google.com/webfonts" rel="nofollow">Google</a>.
+					</p>
+				</div>
+			</div>
+
+		</footer>
+
+
+	</div>
+</body>
+</html>
