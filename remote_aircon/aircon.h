@@ -11,8 +11,8 @@ class AirCon {
       // Set the environment
       temperature_min = 18;
       temperature_max = 30;
-      power_bright_sensor_threshold = 100; // 0 - 1000
-      pin_power_bright_sensor = 0; // Analog
+      power_bright_sensor_threshold = 200; // 0 - 1000
+      pin_power_bright_sensor = 5; // Analog
       pin_temperature_sensor = 2; // Analog
       pin_solenoid_power = 4;
       pin_solenoid_temp_up = 5;
