@@ -5,15 +5,15 @@
 	<title><%= $title %> - sprig::magic</title>
 	<meta name="viewport" content="width=device-width, initial-scale=1">
 	<!--Libraries-->
-	<link rel="stylesheet" href="/style/bootstrap.min.css" media="screen">
-	<link rel="stylesheet" href="/style/bootstrap-switch.min.css" media="screen">
-	<link rel="stylesheet" href="/style/font-awesome.min.css">
-	<script src="/js/jquery-1.11.1.min.js"></script>
-	<script src="/js/angular.min.js"></script>
-	<script src="/js/bootstrap.min.js"></script>
-	<script src="/js/bootstrap-switch.min.js"></script>
+	<%= stylesheet '/style/bootstrap.min.css' %>
+	<%= stylesheet '/style/bootstrap-switch.min.css' %>
+	<%= stylesheet '/style/font-awesome.min.css' %>
+	<%= javascript '/js/jquery-1.11.1.min.js' %>
+	<%= javascript '/js/angular.min.js' %>
+	<%= javascript '/js/bootstrap.min.js' %>
+	<%= javascript '/js/bootstrap-switch.min.js' %>
 	<!--App (AngularJS)-->
-	<script src="/js/app.js"></script>
+	<%= javascript '/js/app.js' %>
 	<!---->
 </head>
 <body ng-app="myApp">

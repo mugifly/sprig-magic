@@ -44,6 +44,24 @@ sub startup {
 	# Set the configuration of cookie
 	$s->app->sessions->cookie_name($config->{session_name} || 'sprigmagic');
 	$s->app->secrets($config->{session_secrets});
+	
+	# Support for the reverse proxy
+	$ENV{MOJO_REVERSE_PROXY} = 1;
+	$s->hook('before_dispatch' => sub {
+		my $s = shift;
+		if ( $s->req->headers->header('X-Forwarded-Host') && defined($s->config->{base_path})) {
+			# Set the base-path (directory path)
+			my @basepaths = split(/\//, $s->config->{base_path});
+			shift @basepaths;
+			foreach my $part(@basepaths){
+				if($part eq ${$s->req->url->path->parts}[0]){
+					push @{$s->req->url->base->path->parts}, shift @{$s->req->url->path->parts};
+				} else {
+					last;
+				}
+			}
+		}
+	});
 
 	# Router
 	my $r = $s->routes;

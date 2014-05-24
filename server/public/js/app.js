@@ -37,7 +37,7 @@ app.controller('AirconCtrl', ['$scope', '$http', '$timeout', function($scope, $h
 			return;
 		}
 
-		$http.post('/aircon/status', { 'action' : 'set_power', 'power': power })
+		$http.post('status/', { 'action' : 'set_power', 'power': power })
 		.success( function(data){
 
 		});
@@ -45,7 +45,7 @@ app.controller('AirconCtrl', ['$scope', '$http', '$timeout', function($scope, $h
 
 	// Get the status of the aircon
 	$scope.getStatus = function() {
-		$http.get('/aircon/status')
+		$http.get('status/')
 		.success( function(data){
 			if ($scope.power == null || $scope.power != data.aircon.power) {
 				$scope.power = data.aircon.power;
@@ -73,7 +73,7 @@ app.controller('AirconCtrl', ['$scope', '$http', '$timeout', function($scope, $h
 			return;
 		}
 
-		$http.post('/aircon/status', { 'action' : 'set_temperature', 'temperature': temp })
+		$http.post('status/', { 'action' : 'set_temperature', 'temperature': temp })
 		.success( function(data){
 
 		});
