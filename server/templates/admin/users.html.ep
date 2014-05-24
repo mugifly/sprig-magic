@@ -48,5 +48,10 @@
 				</tr>
 			<% } %>
 		</table>
+		
+		<ul class="pagination pagination-sm">
+			<li class="disabled"><a href="#">&laquo;</a></li>
+			<li class="active"><a href="#">1 <span class="sr-only">(current)</span></a></li>
+		</ul>
 	</div>
 </div>

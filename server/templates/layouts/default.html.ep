@@ -42,7 +42,9 @@
 						<% if (defined stash('user_id')) { %>
 							<a class="dropdown-toggle" data-toggle="dropdown" href="#" id="usermenu"><%= stash('user')->{oauth_id} %> <span class="caret"></span></a>
 							<ul class="dropdown-menu" aria-labelledby="usermenu">
-								<li><a href="<%= url_for ('/admin') %>"><i class="fa-cog"></i>&nbsp;コントロールパネル</a></li>
+								<% if (stash('user')->{status} == 10) { %>
+									<li><a href="<%= url_for ('/admin') %>"><i class="fa-cog"></i>&nbsp;コントロールパネル</a></li>
+								<% } %>
 								<li><a href="<%= url_for ('/session/logout') %>"><i class="fa-sign-out"></i>&nbsp;ログアウト</a></li>
 							</ul>
 						<% } else { %>

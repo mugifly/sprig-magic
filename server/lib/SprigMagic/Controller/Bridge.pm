@@ -34,7 +34,11 @@ sub login_check {
 				}
 
 				# If normal user
-
+				if ($user->{status} != 10 && $s->current_route =~ /^admin.*/) { # If user has not the admin permission
+					$s->redirect_to('/dashboard');
+					return;
+				}
+				
 				# Set the user-id and user-data into the stash
 				$s->stash('user_id', $user->{id});
 				$s->stash('user', $user);
