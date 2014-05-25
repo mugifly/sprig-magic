@@ -1,0 +1,292 @@
+#!/usr/bin/env perl
+use warnings;
+use strict;
+use utf8;
+
+use lib 'lib/';
+use DBI;
+use FindBin;
+use Mojo::JSON;
+use SprigMagic::Helper::Device;
+
+our $base_path = undef; # Base directory path
+our $config = {}; # Configuration
+our $dbh; # Database handle
+our $tmpdbh; # Temporary database handle
+
+print "----- Sprig::Magic CLI -----\n";
+prepare();
+detect_mode();
+exit;
+
+# ----
+
+# Preparation
+sub prepare {
+	print "Detect the current directory...\n";
+	opendir(my $dirh, $FindBin::Bin);
+	foreach (readdir($dirh)) {
+		next if /^\.{1,2}$/;
+		if ($_ eq 'sprig_magic_cmd') { # Current directory is same as directory of this file
+			$base_path = $FindBin::Bin.'/..';
+			last;
+		} elsif ($_ eq 'cpanfile') { # Current directory is the parent directory of this file
+			$base_path = $FindBin::Bin;
+			last;
+		}
+	}
+
+	print "Read the configuration...\n";
+	$config = eval slurp("${base_path}/config/sprig_magic.conf");
+	if(-f "${base_path}/sprig_magic.production.conf"){
+		# Combine the configuration with configuration of production
+		my %h = (%{eval slurp("${base_path}/config/sprig_magic.production.conf")}, %{$config});
+		$config = \%h;
+	}
+
+	print "Open the database...\n";
+	my $db_filename = $config->{db_filename} || 'sprigmagic.db';
+	my $is_init = (-f $base_path.'/'.$db_filename) ? 0 : 1;
+	$dbh = DBI->connect('dbi:SQLite:'.$base_path.'/'.$db_filename, '', '', {
+		PrintError => 1,
+		RaiseError => 1,
+	}) || die ('Can not open the database');
+	if ($is_init) {
+		init_db();
+	}
+
+	print "Open the temporary database...\n";
+	my $tmpdb_filename = $config->{temp_db_filename} || '/tmp/sprigmagic_tmp.db';
+	$is_init = (-f $tmpdb_filename) ? 0 : 1;
+	$tmpdbh = DBI->connect('dbi:SQLite:'.$tmpdb_filename, '', '', {
+		PrintError => 1,
+		RaiseError => 1,
+	}) || die ('Can not open the temporary database');
+	if ($is_init) {
+		init_tmpdb();
+	}
+}
+
+# Initialization of the database
+sub init_db {
+	print "----- Initialize the database -----\n";
+
+	$dbh->do("DROP TABLE IF EXISTS user");
+	$dbh->do("DROP TABLE IF EXISTS session");
+	$dbh->do("DROP TABLE IF EXISTS device");
+
+	$dbh->do(qq| CREATE TABLE user (
+		id INTEGER PRIMARY KEY,
+		oauth_service TEXT,
+		oauth_id TEXT,
+		status INTEGER NOT NULL,
+		last_logged_in_at INTEGER
+	); |);
+	$dbh->do(qq| CREATE TABLE session (
+		id TEXT UNIQUE NOT NULL,
+		user_id INTEGER NOT NULL,
+		logged_in_at INTEGER NOT NULL,
+		ip_address TEXT,
+		user_agent TEXT
+	); |);
+	$dbh->do(qq| CREATE TABLE device (
+		id INTEGER PRIMARY KEY,
+		name TEXT NOT NULL,
+		status INTEGER NOT NULL,
+		category TEXT NOT NULL,
+		module_name TEXT NOT NULL,
+		connect_port TEXT NOT NULL,
+		persistence_data TEXT
+	); |);
+
+	print "Initialized.\n";
+}
+
+# Initialization of the temporary database
+sub init_tmpdb {
+	print "----- Initialize the temporary database -----\n";
+
+	$tmpdbh->do("DROP TABLE IF EXISTS queue");
+	$tmpdbh->do("DROP TABLE IF EXISTS device_tmp_kvs");
+
+	# Queues
+	$tmpdbh->do(qq| CREATE TABLE queue (
+		id INTEGER PRIMARY KEY,
+		user_id INTEGER NOT NULL,
+		device_id INTEGER NOT NULL,
+		command TEXT NOT NULL,
+		created_at INTEGER NOT NULL
+	); |);
+	# Temporary Key-and-Values store for each device modules
+	$tmpdbh->do(qq| CREATE TABLE device_tmp_kvs (
+		key TEXT PRIMARY KEY NOT NULL,
+		value TEXT NOT NULL
+	); |);
+
+	print "Initialized.\n";
+}
+
+# Detect of the mode
+sub detect_mode {
+	if (!defined $ARGV[0]) {
+		# Show the help message
+		mode_help();
+		return;
+	}
+
+	if ($ARGV[0] eq 'dbinit') {
+		# Initialize the database
+		print "Would you initialize the database? [y/n]: ";
+		my $a = <STDIN>;
+		if ($a !~ /^y$/i) {
+			print "Canceled.\n";
+			return;
+		}
+		init_db();
+
+	} elsif ($ARGV[0] eq 'queue') {
+		mode_queue();
+
+	} else {
+		# Show the help message
+		mode_help();
+	}
+}
+
+# Mode for processing the queue
+sub mode_queue {
+	print "----- Processing the queue -----\n";
+
+	# Listup names of the device module
+	my @device_module_names = get_device_module_names();
+
+	# Listup devices
+	print "* Initialize device modules\n";
+	my $devices = {};
+	my $sth = $dbh->prepare('SELECT * FROM device;');
+	$sth->execute();
+	while (my $d = $sth->fetchrow_hashref) {
+		if ($d->{status} == 0) {
+			print "  * $d->{name} - Skip\n";
+		}
+
+		# Initialize the device module
+		my $module_name = $d->{module_name};
+		eval {
+			$d->{module} = SprigMagic::Helper::Device::get_device_module($module_name, $d->{id}, $d->{name}, $d->{connect_port}, $dbh, $tmpdbh);
+		}; if ($@) {
+			print "    * [WARN] $d->{name} - Initialize failed: $@\n";
+			next;
+		}
+
+		# Add the device object into the devices hashref
+		$devices->{$d->{id}} = $d;
+	}
+
+	# Processing loop
+	while (1) {
+		# Processing the queue
+		print "* Processing queues\n";
+
+		$sth = $tmpdbh->prepare('SELECT * FROM queue;');
+		$sth->execute();
+		while (my $q = $sth->fetchrow_hashref) {
+			print "  * Processing - Queue-id: $q->{id} - $q->{command}\n";
+
+			# Fetch the device object
+			my $d = $devices->{$q->{device_id}};
+
+			# Check the device and the device module
+			if (!defined $d) {
+				print "    * [WARN] Device is not found.\n";
+				next;
+			}
+			if (!defined $d->{module}) {
+				print "    * [WARN] Device module ($d->{module_name}) was not loaded.\n";
+				next;
+			}
+			
+			# Process the command at the device module 
+			eval {
+				my $is_passed = $d->{module}->process_queue_command($q->{command});
+				if ($is_passed) {
+					print "    * Passed\n";
+				} else {
+					print "    * [WARN] Not passed\n";
+				}
+			}; if ($@) {
+				print "    * [WARN] Error occurred at the device module: $@\n";
+				next;
+			}
+			
+			# Delete the queue
+			print "    * Delete a queue\n";
+			$tmpdbh->do('DELETE FROM queue WHERE id = ?;', undef, $q->{id});
+		}
+		$sth->finish();
+
+		# Append the update task for the operating status
+		print "* Append the update task\n";
+		foreach my $device_id (keys %$devices) {
+			my $d = $devices->{$device_id};
+			if (!defined $d->{module}) {
+				print "  * [WARN] Device module ($d->{module_name}) was not loaded.\n";
+				next;
+			}
+
+			my $operating_status_updated_at = $d->{module}->get_operating_status_updated_at();
+			# If necessary, add the task into the queue
+			if (!defined $operating_status_updated_at || $config->{device_operating_status_update_interval_longest_sec} < (time() - $operating_status_updated_at)) {
+				# Check whether exists the update task.
+				my $sth_ = $tmpdbh->prepare('SELECT * FROM queue WHERE device_id = ? AND command = ?;');
+				$sth_->execute($d->{id}, 'update');
+				my $exist_queue = $sth_->fetchrow_hashref;
+				if (!defined $exist_queue->{id}) { # If not exists the update task
+					print "  * Needs to be updated this device - Device-id: $d->{id}\n";
+					# Add the update task
+					$sth_ = $tmpdbh->prepare('INSERT INTO queue VALUES(?, ?, ?, ?, ?);');
+					$sth_->execute(undef, -1, $d->{id}, 'update', time()); # -1: As system user
+				}
+			}
+			
+		}
+		
+		sleep 1;
+	}
+}
+
+# Mode for showing the help
+sub mode_help {
+	print <<EOF;
+./sprig_magic_cmd MODE
+
+MODE:
+	* dbinit		Initialize the database
+	* daemon		Processing the queue
+
+EOF
+}
+
+# Get names of the device module
+sub get_device_module_names {
+	my @names = ();
+	my $module_dir = "${FindBin::Bin}/../lib/SprigMagic/Model/Device/";
+	opendir(my $dirh, $module_dir) || die("Can not open the module directory: ${module_dir}");
+	foreach (readdir($dirh)) {
+		next if /^\.{1,2}$/;
+		if ($_ =~ /^(\w+)\.pm$/ && $_ ne 'Base.pm') {
+			push(@names, $1);
+		}
+	}
+	closedir($dirh);
+	return @names;
+}
+
+# Method for reading the configuration file
+sub slurp {
+	my $path = shift; 
+	open my $file, '<', $path;
+	my $content = '';
+	while ($file->sysread(my $buffer, 131072, 0)) { $content .= $buffer }
+	return $content;
+}

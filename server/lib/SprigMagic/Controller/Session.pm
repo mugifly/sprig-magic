@@ -2,6 +2,60 @@ package SprigMagic::Controller::Session;
 use Mojo::Base 'Mojolicious::Controller';
 use Mojo::JSON;
 
+sub auth_development {
+	my $s = shift;
+
+	if ($s->app->mode() ne 'development') {
+		$s->redirect_to('/');
+		return;
+	}
+	
+	# Load the Session helper
+	$s->app->plugin('SprigMagic::Helper::Session');
+
+	# Find an user from database
+	my $db_user_id = undef;
+	my $sth = $s->db->prepare('SELECT * FROM user WHERE oauth_service = ? AND oauth_id = ?;');
+	$sth->execute('development', 'development');
+	my $user = $sth->fetchrow_hashref;
+	my $user_exist = 0;
+	if (defined $user && $user->{oauth_id} eq 'development') {
+		$user_exist = 1;
+		$db_user_id = $user->{id}
+	}
+	$sth->finish();
+
+	# Upsert to database
+	if ($user_exist) {
+		# Update
+		$sth = $s->db->prepare('UPDATE user SET last_logged_in_at = ? WHERE id = ?;');
+		$sth->execute('development', time());
+		$sth->finish();
+	} else {
+		# Insert as Administrator
+		$sth = $s->db->prepare('INSERT INTO user VALUES (?, ?, ?, ?, ?)');
+		$sth->execute(undef, 'development', 'development', 10, time());
+		$sth->finish();
+		# Check the inserted user-id
+		$sth = $s->db->prepare('SELECT * FROM user WHERE oauth_service = ? AND oauth_id = ?;');
+		$sth->execute('development', 'development');
+		$user = $sth->fetchrow_hashref;
+		$db_user_id = $user->{id};
+		$sth->finish();
+	}
+
+	# Generate the session
+	my $session_id = $s->generate_session_id('DEVELOPMENT'); # Generate a string with using helper
+	$sth = $s->db->prepare('INSERT INTO session VALUES (?, ?, ?, ?, ?)');
+	$sth->execute($session_id, $db_user_id, time(), $s->tx->remote_address, $s->req->headers->user_agent);
+	$sth->finish();
+
+	# Serve the session-cookie, And redirect to top page
+	$s->session(expiration => $s->config->{session_expires});
+	$s->session('session_id', $session_id);
+	$s->redirect_to('/');
+}
+
 sub oauth_google_redirect {
 	my $s = shift;
 

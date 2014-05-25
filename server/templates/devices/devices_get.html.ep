@@ -1,0 +1,24 @@
+% layout 'default';
+% title 'Devices';
+<h1>Devices</h1>
+<div ng-controller="DevicesCtrl"> <!--Controller is DevicesCtrl of app.js-->
+	API:&nbsp;<a href="<%=url_for('/devices.json')%>" target="_blank">JSON</a>
+
+	<div class="row" ng-show="error_text != null">
+		<div class="alert alert-danger">
+			<b>エラー</b><br />
+			{{error_text}}
+		</div>
+	</div>
+
+	<div class="row" ng-repeat="device in devices">
+		<div class="col-md-12">
+			<h3> <a ng-href="<%= url_for('/categories/') %>{{device.category}}">{{device.name}}</a></h3>
+			<ul>
+				<li>Category: <a ng-href="<%= url_for('/categories/') %>{{device.category}}">{{device.category}}</a></li>
+				<li>API: <a ng-href="<%= url_for('/devices/') %>{{device.id}}" target="_blank">JSON</a></li>
+				<li>Module: {{device.module_name}}</li>
+			</ul>
+		</div>
+	</div>
+</div>

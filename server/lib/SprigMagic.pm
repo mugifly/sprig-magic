@@ -11,30 +11,35 @@ sub startup {
 	# Database helper
 	$s->helper(db => sub {
 		my $db_filename = shift->config->{db_filename} || 'sprigmagic.db';
-		my $is_init = (-f $db_filename) ? 0 : 1;
+		if (!-f $db_filename) {
+			die ('[NOTICE] Please initialize the database with using the sprig_magic_cmd command.');
+			return;
+		}
 		my $dbh = DBI->connect('dbi:SQLite:'.$db_filename, '', '', {PrintError => 1, RaiseError => 1}) || die ('Can not open the database');
+		return $dbh;
+	});
+
+	# Temporary database helper
+	$s->helper(tmpdb => sub {
+		my $tmpdb_filename = shift->config->{temp_db_filename} || '/tmp/sprigmagic_tmp.db';
+		my $is_init = (-f $tmpdb_filename) ? 0 : 1;
+		my $tmpdbh = DBI->connect('dbi:SQLite:'.$tmpdb_filename, '', '', {PrintError => 1, RaiseError => 1}) || die ('Can not open the temporary database');
 		if ($is_init) {
-			# Initialize the database
-			$dbh->do(qq| CREATE TABLE user (
-				id integer primary key,
-				oauth_service TEXT,
-				oauth_id TEXT,
-				status integer not null,
-				last_logged_in_at integer
+			# Queues
+			$tmpdbh->do(qq| CREATE TABLE queue (
+				id INTEGER PRIMARY KEY,
+				user_id INTEGER NOT NULL,
+				device_id INTEGER NOT NULL,
+				command TEXT NOT NULL,
+				created_at INTEGER NOT NULL
 			); |);
-			$dbh->do(qq| CREATE TABLE session (
-				id TEXT unique not null,
-				user_id integer not null,
-				logged_in_at integer not null,
-				ip_address TEXT,
-				user_agent TEXT
-			); |);
-			$dbh->do(qq| CREATE TABLE kv (
-				key TEXT primary key,
-				value TEXT not null
+			# Temporary Key-and-Values store for each device modules
+			$tmpdbh->do(qq| CREATE TABLE device_tmp_kvs (
+				key TEXT UNIQUE NOT NULL,
+				value TEXT NOT NULL
 			); |);
 		}
-		return $dbh;
+		return $tmpdbh;
 	});
 
 	# User helper
@@ -74,12 +79,21 @@ sub startup {
 	# Normal route to controller
 	$r->get('/')->to('top#guest');
 	$r->get('/dashboard')->to('top#user');
-	$r->get('/admin')->to('admin#top');
-	$r->get('/admin/users')->to('admin#users');
+	$r->route('/admin')->to('admin#top');
+	$r->route('/admin/devices')->to('admin#devices');
+	$r->route('/admin/users')->to('admin#users');
+	$r->get('/session/auth_development')->to('session#auth_development');
 	$r->get('/session/oauth_google_redirect')->to('session#oauth_google_redirect');
 	$r->get('/session/oauth_google_callback')->to('session#oauth_google_callback');
-	$r->get('/aircon')->to('aircon#top');
-	$r->route('/aircon/status')->to('aircon#status');
+
+	$r->get('/devices' => [format => [qw(html)]])->to('devices#devices_get');
+	$r->get('/devices' => [format => [qw(json)]])->to('devices#devices_get_api');
+	$r->get('/devices')->to('devices#devices_get');
+	$r->post('/devices/:device_id')->to('devices#device_post');
+	$r->get('/devices/:device_id')->to('devices#device_get');
+	
+	$r->get('/categories')->to('categories#categories_get');
+	$r->route('/categories/aircon')->to('categories#aircon');
 }
 
 1;

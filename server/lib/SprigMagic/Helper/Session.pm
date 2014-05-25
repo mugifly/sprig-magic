@@ -1,3 +1,4 @@
+# Session helper
 package SprigMagic::Helper::Session;
 use strict;
 use warnings;

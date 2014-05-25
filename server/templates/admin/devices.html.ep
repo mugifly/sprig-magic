@@ -1,0 +1,82 @@
+% layout 'default';
+% title 'Devices';
+<h1>Control Panel</h1>
+<a href="<%= url_for('/admin/users') %>">Users</a> |
+<b>Devices</b>
+
+<% if (defined stash('message_error')) { %>
+	<div class="row" style="margin-top: 1rem;">
+		<div class="alert alert-danger">
+			<b>エラー:</b>&nbsp;<%= stash('message_error') %>
+		</div>
+	</div>
+<% } %>
+
+<div class="row">
+	<div class="col-md-9">
+		<h3>Devices</h3>
+		<table class="table">
+			<tbody class="table-striped">
+				<tr>
+					<th>ID</th><th>Category</th><th>Name</th><th>Status</th><th>Module</th><th>Connect</th><th>Action</th>
+				</tr>
+				<% foreach my $d (@{$devices}) { %>
+					<tr>
+						<td><%= $d->{id} %></td>
+						<td><a href="<%= url_for('/'.$d->{category}) %>"><%= $d->{category} %></a></td>
+						<td><%= $d->{name} %></td>
+						<td>
+							<% if ($d->{status} == 1) { %>
+								<span class="label label-success">Enabled</span>
+							<% } elsif ($d->{status} == 0) { %>
+								<span class="label label-default">Disabled</span>
+							<% } else { %>
+								<%= $d->{status} %>
+							<% } %>
+						</td>
+						<td><%= $d->{module_name} %></td>
+						<td>
+							<%= $d->{module}->get_connect_type() %>
+							(<%= $d->{connect_port} %>)
+						</td>
+						<td>
+							<% if ($d->{status} == 1) { %>
+								<a href="<%= url_for('/admin/devices?action=status&device_id='.$d->{id}.'&status=0') %>" class="btn btn-default btn-xs">Disable</a>
+							<% } elsif ($d->{status} == 0) { %>
+								<a href="<%= url_for('/admin/devices?action=status&device_id='.$d->{id}.'&status=1') %>" class="btn btn-success btn-xs">Enable</a>
+							<% } %>
+							<a href="<%= url_for('/admin/devices?action=delete&device_id='.$d->{id}) %>" class="btn btn-danger btn-xs">Delete</a>
+						</td>
+					</tr>
+				<% } %>
+			</tbody>
+		</table>
+	</div>
+
+	<div class="col-md-3">
+		<h3>Add a device</h3>
+		<form method="post" action="<%= url_for('/admin/devices') %>" role="form">
+			<input type="hidden" name="action" value="add">
+
+			<div class="form-group">
+				<label for="device-name">Device name</label>
+				<input type="text" class="form-control" name="device_name" placeholder="e.g., Aircon in the bed room" value="<%= $form_device_name %>">
+			</div>
+			<div class="form-group">
+				<label for="connect_port">Port</label>
+				<input type="text" class="form-control" name="connect_port" placeholder="e.g., /dev/rfcomm0" value="<%= $form_connect_port %>">
+			</div>
+
+			<div class="form-group">
+				<label for="module_name">Module</label>
+				<select name="module_name" class="form-control">
+					<% foreach my $d (@{$device_module_names}) { %>
+						<option value="<%= $d %>" <% if ($d eq $form_module_name) { %>selected<% } %>><%= $d %><option>
+					<% } %>
+				</select>
+			</div>
+
+			<button type="submit" class="btn btn-primary">Add</button>
+		</form>
+	</div>
+</div>

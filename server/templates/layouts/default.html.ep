@@ -13,6 +13,9 @@
 	<%= javascript '/js/bootstrap.min.js' %>
 	<%= javascript '/js/bootstrap-switch.min.js' %>
 	<!--App (AngularJS)-->
+	<script type="text/javascript">
+		APP_BASEPATH	 = window.location.protocol + '//' + window.location.host + '<%= url_for('/') %>'; 
+	</script>
 	<%= javascript '/js/app.js' %>
 	<!---->
 </head>
@@ -30,10 +33,13 @@
 			<div class="navbar-collapse collapse" id="navbar-main">
 				<ul class="nav navbar-nav">
 					<li <% if ($self->current_route eq '' || $self->current_route =~ /^(top|dashboard).*/) { %>class="active"<% } %>>
-						<a href="<%= url_for ('/') %>">Top</a>
+						<a href="<%= url_for ('/') %>">Home</a>
 					</li>
-					<li <% if ($self->current_route =~ /^aircon.*/) { %>class="active"<% } %>>
-						<a href="<%= url_for ('/aircon') %>">Aircon</a>
+					<li <% if ($self->current_route =~ /^devices.*/) { %>class="active"<% } %>>
+						<a href="<%= url_for ('/devices') %>">Devices</a>
+					</li>
+					<li <% if ($self->current_route =~ /^categoriesaircon.*/) { %>class="active"<% } %>>
+						<a href="<%= url_for ('/categories/aircon') %>">Aircon</a>
 					</li>
 				</ul>
 
@@ -48,9 +54,12 @@
 								<li><a href="<%= url_for ('/session/logout') %>"><i class="fa-sign-out"></i>&nbsp;ログアウト</a></li>
 							</ul>
 						<% } else { %>
-							<a class="dropdown-toggle" data-toggle="dropdown" href="#" id="usermenu">ログイン <span class="caret"></span></a>
+							<a class="dropdown-toggle" data-toggle="dropdown" href="<%= url_for('/session/oauth_google_redirect') %>" id="usermenu">ログイン <span class="caret"></span></a>
 							<ul class="dropdown-menu" aria-labelledby="usermenu">
-								<li><a href="<%= url_for ('/session/oauth_google_redirect') %>"><i class="fa-sign-in"></i>&nbsp;ログイン</a></li>
+								<% if ($self->app->mode() eq 'development') { %>
+									<li><a href="<%= url_for ('/session/auth_development') %>"><i class="fa-sign-in"></i>&nbsp;Developper login</a></li>
+								<% } %>
+								<li><a href="<%= url_for ('/session/oauth_google_redirect') %>"><i class="fa-sign-in"></i>&nbsp;ログイン with Google</a></li>
 							</ul>
 						<% } %>
 					</li>

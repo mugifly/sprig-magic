@@ -1,14 +1,17 @@
 % layout 'default';
 % title 'Users';
 <h1>Control Panel</h1>
+<b>Users</b> |
+<a href="<%= url_for('/admin/devices') %>">Devices</a>
+
 <h2>Users</h2>
 <div class="row">
 	<div class="col-md-12">
 		<table class="table">
 			<tr>
-				<th>ID</th><th>OA.Service</th><th>OA.ID</th><th>Status</th><th>Last login</th><th>Action</th>
+				<th>ID</th><th>OA.Service</th><th>OA.ID</th><th>Status</th><th>Last logged-in</th><th>Action</th>
 			</tr>
-			<% foreach my $user (@{&stash('users')}) { %>
+			<% foreach my $user (@{$users}) { %>
 				<tr>
 					<td><%= $user->{id} %></td>
 					<td><%= $user->{oauth_service} %></td>
@@ -26,7 +29,7 @@
 							<%= $user->{status} %>
 						<% } %>
 					</td>
-					<td><%= $user->{last_logged_in_at} %></td>
+					<td><%= $user->{last_logged_in_date} %></td>
 					<td>
 						<% if (stash('user_id') eq $user->{id}) { %>
 							- <!-- Your self -->

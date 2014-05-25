@@ -1,0 +1,41 @@
+% layout 'default';
+% title 'Aircon';
+<h1>Air-con.</h1>
+<div ng-controller="DevicesCtrl"> <!--Controller is DevicesCtrl of app.js-->
+	Category: aircon / API:&nbsp;<a href="<%=url_for('/devices.json?category=aircon')%>">JSON</a>
+
+	<div class="row" ng-show="error_text != null">
+		<div class="alert alert-danger">
+			<b>エラー</b><br />
+			{{error_text}}
+		</div>
+	</div>
+
+	<div class="row" ng-repeat="device in devices" ng-controller="AirconCtrl"> <!--Controller is AirconCtrl of app.js-->
+		<div class="col-md-12">
+			<h3>{{device.name}}</h3>
+		</div>
+		<div class="col-md-4">
+			<h4>電源</h4>
+			<p>
+				<input type="checkbox" class="switch_power_{{device.id}}" ng-model="power" ng-checked="device.operating_status.power == true"><br/>
+				<small>Brightness sensor: {{device.operating_status.power_brightness_sensor_value}}</small>
+			</p>
+		</div>
+		<div class="col-md-4">
+			<h4>設定温度</h4>
+			<p>
+				<select class="form-control" ng-model="temperature_set" ng-change="setTemperature(temperature_set);">
+					<option ng-repeat="temp in temperatures" value="{{temp.value}}">{{temp.label}}</option>
+				</select>
+			</p>
+		</div>
+
+		<div class="col-md-4">
+			<h4>現在温度</h4>
+			<p>
+				{{device.operating_status.temperature_real}} ℃
+			</p>
+		</div>
+	</div>
+</div>
