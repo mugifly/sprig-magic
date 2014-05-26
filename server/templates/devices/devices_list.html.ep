@@ -13,11 +13,10 @@
 
 	<div class="row" ng-repeat="device in devices">
 		<div class="col-md-12">
-			<h3> <a ng-href="<%= url_for('/categories/') %>{{device.category}}">{{device.name}}</a></h3>
+			<h3> <a ng-href="<%= url_for('/devices/') %>{{device.id}}">{{device.name}}</a></h3>
 			<ul>
-				<li>Category: <a ng-href="<%= url_for('/categories/') %>{{device.category}}">{{device.category}}</a></li>
-				<li>API: <a ng-href="<%= url_for('/devices/') %>{{device.id}}" target="_blank">JSON</a></li>
-				<li>Module: {{device.module_name}}</li>
+				<li>Category: <a ng-href="<%= url_for('/categories/') %>{{device.category_name}}">{{device.category_name}}</a></li>
+				<li>Last updated: {{ device.operating_status_updated_at * 1000 | date:'yyyy-MM-dd HH:mm:ss'}}</li>
 			</ul>
 		</div>
 	</div>

@@ -79,10 +79,10 @@ sub devices {
 					# Generate the device module
 					my $module = $s->get_device_module($module_name, undef, $name, $port); # Get the device module with using helper
 					# Get the category name from the module
-					my $category = $module->get_category();
+					my $category_name = $module->get_category_name();
 					
 					my $sth = $s->db->prepare('INSERT INTO device VALUES(?, ?, ?, ?, ?, ?, ?);');
-					$sth->execute(undef, $name, $status, $category, $module_name, $port, undef);
+					$sth->execute(undef, $name, $status, $category_name, $module_name, $port, undef);
 					$s->redirect_to('/admin/devices');
 					return;
 				}; if ($@) {

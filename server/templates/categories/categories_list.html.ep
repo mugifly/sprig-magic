@@ -1,0 +1,19 @@
+% layout 'default';
+% title 'Categories';
+<h1>Categories</h1>
+<table class="table">
+	<tr>
+		<th>Category name</th>
+		<th>Number of devices</th>
+	</tr>
+	<% foreach my $category_name (keys %$categories) { %>
+	<tr>
+		<td>
+			<a href="<%= url_for('/categories/'.$category_name) %>"><%= ${category_name} %></a>
+		</td>
+		<td>
+			<%= $categories->{$category_name}->{num_of_devices} %> devices
+		</td>
+	</tr>
+	<% } %>
+</table>

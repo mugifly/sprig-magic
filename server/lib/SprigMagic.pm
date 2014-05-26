@@ -86,14 +86,20 @@ sub startup {
 	$r->get('/session/oauth_google_redirect')->to('session#oauth_google_redirect');
 	$r->get('/session/oauth_google_callback')->to('session#oauth_google_callback');
 
-	$r->get('/devices' => [format => [qw(html)]])->to('devices#devices_get');
-	$r->get('/devices' => [format => [qw(json)]])->to('devices#devices_get_api');
-	$r->get('/devices')->to('devices#devices_get');
-	$r->post('/devices/:device_id')->to('devices#device_post');
-	$r->get('/devices/:device_id')->to('devices#device_get');
+	$r->get('/devices' => [format => [qw(html)]])->to('devices#devices_list');
+	$r->get('/devices' => [format => [qw(json)]])->to('devices#devices_list_api');
+	$r->get('/devices')->to('devices#devices_list');
+
+	$r->get('/devices/:device_id' => [format => [qw(html)]])->to('devices#device_detail');
+	$r->get('/devices/:device_id' => [format => [qw(json)]])->to('devices#device_detail_api');
+	$r->get('/devices/:device_id')->to('devices#device_detail');
 	
-	$r->get('/categories')->to('categories#categories_get');
-	$r->route('/categories/aircon')->to('categories#aircon');
+	$r->post('/devices/:device_id')->to('devices#device_post');
+	
+	$r->get('/categories')->to('categories#categories_list');
+	$r->route('/categories/:category_name')->to('categories#category_devices');
+	
+	$r->get('/queues')->to('queues#queues_get');
 }
 
 1;

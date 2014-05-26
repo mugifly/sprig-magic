@@ -1,5 +1,25 @@
 # carton snapshot format: version 1.0
 DISTRIBUTIONS
+  Crypt-SSLeay-0.72
+    pathname: N/NA/NANIS/Crypt-SSLeay-0.72.tar.gz
+    provides:
+      Crypt::SSLeay 0.72
+      Crypt::SSLeay::CTX undef
+      Crypt::SSLeay::Conn undef
+      Crypt::SSLeay::Err undef
+      Crypt::SSLeay::MainContext undef
+      Crypt::SSLeay::Version undef
+      Crypt::SSLeay::X509 undef
+      Net::SSL 2.86
+    requirements:
+      ExtUtils::CBuilder 0.280205
+      ExtUtils::MakeMaker 0
+      Getopt::Long 0
+      LWP::Protocol::https 6.02
+      MIME::Base64 0
+      Path::Class 0.26
+      Try::Tiny 0.19
+      perl 5.006
   DBD-SQLite-1.42
     pathname: I/IS/ISHIGAKI/DBD-SQLite-1.42.tar.gz
     provides:
@@ -264,6 +284,22 @@ DISTRIBUTIONS
       File::Temp 0
       Scalar::Util 0
       Test::More 0.88
+  IO-Socket-SSL-1.989
+    pathname: S/SU/SULLR/IO-Socket-SSL-1.989.tar.gz
+    provides:
+      IO::Socket::SSL 1.989
+      IO::Socket::SSL::Intercept 1.93
+      IO::Socket::SSL::OCSP_Cache 1.989
+      IO::Socket::SSL::OCSP_Resolver 1.989
+      IO::Socket::SSL::PublicSuffix undef
+      IO::Socket::SSL::SSL_Context 1.989
+      IO::Socket::SSL::SSL_HANDLE 1.989
+      IO::Socket::SSL::Session_Cache 1.989
+      IO::Socket::SSL::Utils 0.02
+    requirements:
+      ExtUtils::MakeMaker 0
+      Net::SSLeay 1.46
+      Scalar::Util 0
   JSON-2.90
     pathname: M/MA/MAKAMAKA/JSON-2.90.tar.gz
     provides:
@@ -280,6 +316,18 @@ DISTRIBUTIONS
     requirements:
       ExtUtils::MakeMaker 0
       perl 5.006002
+  LWP-Protocol-https-6.04
+    pathname: G/GA/GAAS/LWP-Protocol-https-6.04.tar.gz
+    provides:
+      LWP::Protocol::https 6.04
+      LWP::Protocol::https::Socket 6.04
+    requirements:
+      ExtUtils::MakeMaker 0
+      IO::Socket::SSL 1.54
+      LWP::UserAgent 6.04
+      Mozilla::CA 20110101
+      Net::HTTPS 6
+      perl 5.008001
   Mojolicious-4.99
     pathname: S/SR/SRI/Mojolicious-4.99.tar.gz
     provides:
@@ -393,6 +441,14 @@ DISTRIBUTIONS
     requirements:
       ExtUtils::MakeMaker 0
       perl 5.010001
+  Mozilla-CA-20130114
+    pathname: A/AB/ABH/Mozilla-CA-20130114.tar.gz
+    provides:
+      Mozilla::CA 20130114
+    requirements:
+      ExtUtils::MakeMaker 0
+      Test 0
+      perl 5.006
   Net-HTTP-6.06
     pathname: G/GA/GAAS/Net-HTTP-6.06.tar.gz
     provides:
@@ -426,6 +482,52 @@ DISTRIBUTIONS
       Test::More 0
       URI 0
       YAML 0
+  Net-SSLeay-1.63
+    pathname: M/MI/MIKEM/Net-SSLeay-1.63.tar.gz
+    provides:
+      Net::SSLeay 1.63
+      Net::SSLeay::Handle 0.61
+    requirements:
+      ExtUtils::MakeMaker 6.36
+      MIME::Base64 0
+      Test::More 0.60_01
+      perl 5.005
+  Path-Class-0.33
+    pathname: K/KW/KWILLIAMS/Path-Class-0.33.tar.gz
+    provides:
+      Path::Class 0.33
+      Path::Class::Dir 0.33
+      Path::Class::Entity 0.33
+      Path::Class::File 0.33
+    requirements:
+      Carp 0
+      Cwd 0
+      Exporter 0
+      ExtUtils::MakeMaker 6.30
+      File::Copy 0
+      File::Path 0
+      File::Spec 3.26
+      File::Temp 0
+      File::stat 0
+      IO::Dir 0
+      IO::File 0
+      Module::Build 0.3601
+      Perl::OSType 0
+      Scalar::Util 0
+      overload 0
+      parent 0
+      strict 0
+  Try-Tiny-0.22
+    pathname: D/DO/DOY/Try-Tiny-0.22.tar.gz
+    provides:
+      Try::Tiny 0.22
+    requirements:
+      Carp 0
+      Exporter 5.57
+      ExtUtils::MakeMaker 6.30
+      constant 0
+      strict 0
+      warnings 0
   URI-1.60
     pathname: G/GA/GAAS/URI-1.60.tar.gz
     provides:

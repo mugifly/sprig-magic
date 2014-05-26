@@ -72,11 +72,11 @@ void loop() {
           Serial.println("power=false;");
           btSerial.println("power=false;");
         }
-      } else if (cmdBuffer.cmd == "get_power_brightness_sensor_value") {
+      } else if (cmdBuffer.cmd == "get_power_sensor_val") {
         // Get a value of the power brightness sensor
         int v = airCon.getPowerBrightSensor();
-        Serial.println("power_brightness_sensor_value=" + String(v) + ";");
-        btSerial.println("power_brightness_sensor_value=" + String(v) + ";");
+        Serial.println("get_power_sensor_val=" + String(v) + ";");
+        btSerial.println("get_power_sensor_val=" + String(v) + ";");
       } else if (cmdBuffer.cmd == "set_temp") {
         // Set the temperature
         Serial.println("Set the temperature to " + cmdBuffer.value);

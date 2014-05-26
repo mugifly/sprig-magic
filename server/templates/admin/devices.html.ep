@@ -23,7 +23,7 @@
 				<% foreach my $d (@{$devices}) { %>
 					<tr>
 						<td><%= $d->{id} %></td>
-						<td><a href="<%= url_for('/'.$d->{category}) %>"><%= $d->{category} %></a></td>
+						<td><a href="<%= url_for('/categories/'.$d->{category_name}) %>"><%= $d->{category_name} %></a></td>
 						<td><%= $d->{name} %></td>
 						<td>
 							<% if ($d->{status} == 1) { %>

@@ -13,8 +13,24 @@ sub register {
 	$app->helper( get_device_module_names => 
 		sub {
 			my @names = ();
-			my $module_dir = "${FindBin::Bin}/../../lib/SprigMagic/Model/Device/";
-			opendir(my $dirh, $module_dir) || die("Can not open the module directory: ${module_dir}");
+			my $dirh;
+			# Detect the current directory
+			my $base_path = "";
+			opendir($dirh, $FindBin::Bin);
+			foreach (readdir($dirh)) {
+				next if /^\.{1,2}$/;
+				if ($_ eq 'sprig_magic_cmd') { # Current directory is same as directory of this file
+					$base_path = $FindBin::Bin.'/..';
+					last;
+				} elsif ($_ eq 'cpanfile') { # Current directory is the parent directory of this file
+					$base_path = $FindBin::Bin;
+					last;
+				}
+			}
+			closedir($dirh);
+			# Find modules
+			my $module_dir = "${base_path}/lib/SprigMagic/Model/Device/";
+			opendir($dirh, $module_dir) || die("Can not open the module directory: ${module_dir}");
 			foreach (readdir($dirh)) {
 				next if /^\.{1,2}$/;
 				if ($_ =~ /^(\w+)\.pm$/ && $_ ne 'Base.pm') {
@@ -29,19 +45,19 @@ sub register {
 	# Get an instance of the device module
 	$app->helper( get_device_module => 
 		sub {
-			my ($s, $module_name, $device_id, $device_name, $connect_port, $dbh, $tmpdbh) = @_;
-			return get_device_module($module_name, $device_id, $device_name, $connect_port, $dbh, $tmpdbh);
+			my ($s, $module_name, $device_id, $device_name, $connect_port_opt, $dbh, $tmpdbh) = @_;
+			return get_device_module($module_name, $device_id, $device_name, $connect_port_opt, $dbh, $tmpdbh);
 		}
 	);
 }
 
 # Get an instance of the device module
 sub get_device_module {
-	my ($module_name, $device_id, $device_name, $connect_port, $dbh, $tmpdbh) = @_;
+	my ($module_name, $device_id, $device_name, $connect_port_opt, $dbh, $tmpdbh) = @_;
 	my %params = (
 		device_id => undef,
 		device_name => $device_name,
-		connect_port => $connect_port,
+		connect_port => $connect_port_opt || undef, # If the connect-port isn't given, module will not connect to device. It means you can get defined data only.
 		# Prepare the methods for called from the device module.
 		db_methods => {
 			persistence_data_updater => sub { # Method for update the persistence-data; It will called from the device module.
@@ -81,6 +97,16 @@ sub get_device_module {
 			},
 			queue_inserter => sub { # Method for insert a command into queues; It will called from the device module.
 				my ($command) = @_;
+				if ($command eq 'update') { # If command is updating of the operating status
+					# Check whether exists the update task.
+					my $sth_ = $tmpdbh->prepare('SELECT * FROM queue WHERE device_id = ? AND command = ?;');
+					$sth_->execute($device_id, 'update');
+					my $exist_queue = $sth_->fetchrow_hashref;
+					if (defined $exist_queue->{id}) { # If exists the update task
+						# Cancel
+						return;
+					}
+				}
 				my $sth = $tmpdbh->prepare('INSERT INTO queue VALUES(?, ?, ?, ?, ?);');
 				$sth->execute(undef, -1, $device_id, $command, time());
 				$sth->finish();

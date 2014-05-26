@@ -1,0 +1,29 @@
+% layout 'default';
+% title $category_name;
+<h1><%= $category_name %></h1>
+<div ng-controller="DevicesCtrl"> <!--Controller is DevicesCtrl of app.js-->
+	API:&nbsp;<a href="<%=url_for('/devices.json?category='.$category_name)%>">JSON</a>
+
+	<div class="row" ng-show="error_text != null">
+		<div class="alert alert-danger">
+			<b>エラー</b><br />
+			{{error_text}}
+		</div>
+	</div>
+
+	<div class="row" ng-repeat="device in devices">
+		<div class="col-md-12">
+			<h3> <a ng-href="<%= url_for('/devices/') %>{{device.id}}">{{device.name}}</a></h3>
+			<ul>
+				<li>Category: <a ng-href="<%= url_for('/categories/') %>{{device.category_name}}">{{device.category_name}}</a></li>
+				<li>Last updated: {{ device.operating_status_updated_at * 1000 | date:'yyyy-MM-dd HH:mm:ss'}}</li>
+			</ul>
+		</div>
+	</div>
+	
+	% #<div ng-repeat="device in devices">
+	% #	<!-- Detail of a device; The following will replaced to /partial_includes/template_device_detail/*.html -->
+	% #	<div include-device-detail-template="<%= $category_name %>"></div>
+	% #	<!---->
+	% # </div>
+</div>

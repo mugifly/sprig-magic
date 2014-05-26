@@ -93,7 +93,7 @@ sub init_db {
 		id INTEGER PRIMARY KEY,
 		name TEXT NOT NULL,
 		status INTEGER NOT NULL,
-		category TEXT NOT NULL,
+		category_name TEXT NOT NULL,
 		module_name TEXT NOT NULL,
 		connect_port TEXT NOT NULL,
 		persistence_data TEXT
@@ -157,36 +157,48 @@ sub detect_mode {
 sub mode_queue {
 	print "----- Processing the queue -----\n";
 
-	# Listup names of the device module
-	my @device_module_names = get_device_module_names();
-
-	# Listup devices
-	print "* Initialize device modules\n";
+	# List of names of device module
+	my @device_module_names;
+	# Hash of objects of the device
 	my $devices = {};
-	my $sth = $dbh->prepare('SELECT * FROM device;');
-	$sth->execute();
-	while (my $d = $sth->fetchrow_hashref) {
-		if ($d->{status} == 0) {
-			print "  * $d->{name} - Skip\n";
-		}
-
-		# Initialize the device module
-		my $module_name = $d->{module_name};
-		eval {
-			$d->{module} = SprigMagic::Helper::Device::get_device_module($module_name, $d->{id}, $d->{name}, $d->{connect_port}, $dbh, $tmpdbh);
-		}; if ($@) {
-			print "    * [WARN] $d->{name} - Initialize failed: $@\n";
-			next;
-		}
-
-		# Add the device object into the devices hashref
-		$devices->{$d->{id}} = $d;
-	}
+	# Statement handle
+	my $sth;
 
 	# Processing loop
+	my $count = 0;
 	while (1) {
+		if ($count == 0) {
+			# Listup names of the device module
+			@device_module_names = get_device_module_names();
+
+			# Listup devices
+			print "* Initialize device modules\n";
+			
+			$sth = $dbh->prepare('SELECT * FROM device;');
+			$sth->execute();
+			while (my $d = $sth->fetchrow_hashref) {
+				if ($d->{status} == 0) {
+					print "  * $d->{name} - Skip\n";
+				}
+
+				# Initialize the device module
+				my $module_name = $d->{module_name};
+				eval {
+					$d->{module} = SprigMagic::Helper::Device::get_device_module($module_name, $d->{id}, $d->{name}, $d->{connect_port}, $dbh, $tmpdbh);
+				}; if ($@) {
+					print "    * [WARN] $d->{name} - Initialize failed: $@\n";
+					next;
+				}
+
+				# Add the device object into the devices hashref
+				$devices->{$d->{id}} = $d;
+			}
+			
+			sleep 10;
+		}
+
 		# Processing the queue
-		print "* Processing queues\n";
+		print "* Processing queues - ". time() . "\n";
 
 		$sth = $tmpdbh->prepare('SELECT * FROM queue;');
 		$sth->execute();
@@ -250,8 +262,15 @@ sub mode_queue {
 			}
 			
 		}
+
+		# Increment or reset the count
+		if (defined $config->{queue_device_reset_interval_sec} && $config->{queue_device_reset_interval_sec} <= $count) {
+			$count = 0;
+		} else {
+			$count++;
+		}
 		
-		sleep 1;
+		sleep 2;
 	}
 }
 

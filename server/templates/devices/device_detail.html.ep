@@ -1,0 +1,20 @@
+% layout 'default';
+% title 'Device';
+<div ng-controller="DeviceCtrl" ng-init="device_id='<%= $device_id %>'" ng-show="device_id != undefined"> <!--Controller is DevicesCtrl of app.js-->
+	<h1>{{device.name}}</h1>
+	<div class="well well-sm">
+		Category: <a ng-href="<%= url_for('/categories/') %>{{device.category_name}}">{{device.category_name}}</a> / 
+		Module: {{device.module_name}} / 
+		Last updated: {{ device.operating_status_updated_at * 1000 | date:'yyyy-MM-dd HH:mm:ss'}} / 
+		API: <a href="<%=url_for('/devices/'. $device_id .'.json')%>" target="_blank">JSON</a>
+	</div>
+
+	<div class="row" ng-show="error_text != null">
+		<div class="alert alert-danger">
+			<b>エラー</b><br />
+			{{error_text}}
+		</div>
+	</div>
+
+	<div include-device-detail-template="{{device.category_name}}"></div>
+</div>

@@ -13,8 +13,8 @@ sub new {
 
 	$s->{device_id} = $hash{device_id};
 	$s->{device_name} = $hash{device_name};
-	$s->{connect_port} = $hash{connect_port};
-	$s->{db_methods} = $hash{db_methods};
+	$s->{db_methods} = $hash{db_methods} || undef; # Optional
+	$s->{connect_port} = $hash{connect_port} || undef; # Optional
 	
 	return $s;
 }
@@ -22,7 +22,7 @@ sub new {
 # Device information ##########
 
 # Return the category of the device
-sub get_category {
+sub get_category_name {
 	die; # Because it is the base module
 	return 'foo'; # e.g., tv, aircon, ...
 }
@@ -64,7 +64,11 @@ sub request_command_into_queue {
 # Get the the operating status of the device
 sub get_latest_operating_status {
 	my ($s) = @_;
-	return Mojo::JSON::decode_json($s->get_temporary_kvs('OPERATING_STATUS'));
+	my $operating_status = $s->get_temporary_kvs('OPERATING_STATUS');
+	if (!defined $operating_status) {
+		return undef;
+	}
+	return Mojo::JSON::decode_json($operating_status);
 }
 
 # Get the update of the operating status of the device (as epoch-sec)
