@@ -8,20 +8,31 @@ sub github_webhook_receiver {
 
 	# Check the configuration
 	if (!defined $s->config->{is_enable_github_webhook_receiver}) {
-		$s->render('The updater is disabled.', status => 400);
+		$s->render(text => 'The updater is disabled.', status => 400);
+		return;
 	} elsif (!defined $s->config->{github_webhook_target_branch}) {
-		$s->render('The webhook target branch is not specified.', status => 400);
+		$s->render(text => 'The webhook target branch is not specified.', status => 400);
+		return;
 	}
 
 	# Read the payload
-	if (!defined $s->param('payload')) {
+	my $payload = undef;
+	if (defined $s->param('payload')) {
+		$payload = Mojo::JSON::decode_json(Mojo$s->param('payload'));
+	} else {
+		eval {
+			$payload = Mojo::JSON::decode_json($s->req->body);
+		};
+	}
+
+	if (!defined $payload) {
 		$s->render(text => 'Invalid parameter', status => 400);
 		return;
 	}
 
-	my $payload = Mojo::JSON::decode_json($s->param('payload'));
 	if ($payload->{ref} ne 'refs/heads/'.$s->config->{github_webhook_target_branch}) {
 		$s->render(text => 'Not target refs', status => 400);
+		return;
 	}
 
 	# Exec the repository updater
@@ -34,13 +45,14 @@ sub github_webhook_receiver {
 	}
 
 	if (!defined $script_path) {
-		$s->render('The updater is not found.', status => 400);
+		$s->render(text => 'The updater is not found.', status => 400);
+		return;
 	}
 
 	system($script_path.' '.$s->config->{github_webhook_target_branch});
 
 	# Render
-	$s->render('Started the updater.');
+	$s->render(text => 'Started the updater.');
 }
 
 1;

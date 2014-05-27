@@ -100,15 +100,16 @@ app.controller('DeviceCtrl', ['$scope', '$http', '$timeout', function($scope, $h
 			if (data.device == null) {
 				$scope.error_text = "デバイスのデータを取得できません";
 				return;
-			} else if (data.device.operating_status == null) {
-				$scope.error_text = "このデバイスの稼動状態は不明です。サーバとデバイスまたはアダプタ間の接続が一時的に切断されている可能性があります。";
-				return;
 			}
-			
+
 			$scope.device = data.device;
 
-			// Clear the error text
-			$scope.error_text = null;
+			if (data.device.operating_status == null) {
+				$scope.error_text = "このデバイスの稼動状態は不明です。サーバとデバイスまたはアダプタ間の接続が一時的に切断されている可能性があります。";
+			} else {
+				// Clear the error text
+				$scope.error_text = null;
+			}
 		})
 		.error(function(data, status, headers, config) {
 			// Clear the error text
@@ -158,11 +159,13 @@ app.controller('AirconCtrl', ['$scope', '$http', '$timeout', function($scope, $h
 	}
 
 	$timeout(function(){
-		$('.switch_power_' + $scope.device.id).bootstrapSwitch('state', $scope.device.operating_status.power)
-			.on('switchChange.bootstrapSwitch', function(event, state) {
-				// Turn on/off
-				angular.element(event.target).scope().setPower(state);
-		});
+		if ($scope.device.operating_status != null) {
+			$('.switch_power_' + $scope.device.id).bootstrapSwitch('state', $scope.device.operating_status.power)
+				.on('switchChange.bootstrapSwitch', function(event, state) {
+					// Turn on/off
+					angular.element(event.target).scope().setPower(state);
+			});
+		}
 	}, 100);
 
 	// Watch for the updating of the operating status
