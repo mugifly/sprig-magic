@@ -100,8 +100,11 @@ app.controller('DeviceCtrl', ['$scope', '$http', '$timeout', function($scope, $h
 			if (data.device == null) {
 				$scope.error_text = "デバイスのデータを取得できません";
 				return;
+			} else if (data.device.operating_status == null) {
+				$scope.error_text = "このデバイスの稼動状態は不明です。サーバとデバイスまたはアダプタ間の接続が一時的に切断されている可能性があります。";
+				return;
 			}
-
+			
 			$scope.device = data.device;
 
 			// Clear the error text
@@ -167,6 +170,10 @@ app.controller('AirconCtrl', ['$scope', '$http', '$timeout', function($scope, $h
 	$scope.$watch(function(){
 		return $scope.device.operating_status;
 	}, function(operating_status){
+		if (operating_status == null) {
+			return;
+		}
+
 		if ($scope.before_operating_status.power == null || operating_status.power != $scope.before_operating_status.power) {
 			console.log("The status of power has been changed: " + operating_status.power);
 			$('.switch_power_' + $scope.device.id).bootstrapSwitch('state', operating_status.power);

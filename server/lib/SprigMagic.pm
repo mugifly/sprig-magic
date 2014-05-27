@@ -100,6 +100,8 @@ sub startup {
 	$r->route('/categories/:category_name')->to('categories#category_devices');
 	
 	$r->get('/queues')->to('queues#queues_get');
+
+	$r->post('/github_webhook_receiver')->to('develop#github_webhook_receiver');
 }
 
 1;

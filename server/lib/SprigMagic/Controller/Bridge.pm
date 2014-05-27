@@ -57,6 +57,8 @@ sub login_check {
 		return 1; # Continue after process
 	} elsif ($s->current_route =~ /^session.*/){
 		return 1; # Continue after process
+	} elsif ($s->current_route eq 'github_webhook_receiver'){
+		return 1; # Continue after process
 	}
 
 	# Redirect to top page (for login)
