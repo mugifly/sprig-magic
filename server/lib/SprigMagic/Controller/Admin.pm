@@ -43,8 +43,15 @@ sub users {
 
 	# Find users
 	my @users = ();
-	my $sth = $s->db->prepare('SELECT * FROM user;');
-	$sth->execute();
+	my $sth = $s->db->prepare('SELECT * FROM user LIMIT ? OFFSET ?;');
+	my $page = 0;
+	if (defined $s->param('page')) {
+		my $p = $s->param('page');
+		$p =~ s/[^0-9]//g;
+		$page = $p if ($p ne "");
+	}
+	my $num_per_page = 20;
+	$sth->execute($num_per_page, $num_per_page * ($page));
 	while (my $user = $sth->fetchrow_hashref) {
 		$user->{last_logged_in_date} = Time::Piece->strptime($user->{last_logged_in_at}, '%s')->strftime('%Y/%m/%d %H:%M %z');
 
@@ -54,6 +61,7 @@ sub users {
 
 	# Render
 	$s->render(
+		page => $page,
 		users => \@users
 	);
 }

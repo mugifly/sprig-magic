@@ -53,8 +53,13 @@
 		</table>
 		
 		<ul class="pagination pagination-sm">
-			<li class="disabled"><a href="#">&laquo;</a></li>
-			<li class="active"><a href="#">1 <span class="sr-only">(current)</span></a></li>
+			% if ($page == 0) {
+				<li class="disabled"><a href="#">&laquo;</a></li>
+			% } else {
+				<li><a href="/admin/users?page=<%= $page - 1 %>">&laquo;</a></li>
+			% }
+			<li class="active"><a href="javascript:void(0);"><%= $page %> <span class="sr-only">(current)</span></a></li>
+			<li><a href="/admin/users?page=<%= $page + 1 %>">&raquo;</a></li>
 		</ul>
 	</div>
 </div>
