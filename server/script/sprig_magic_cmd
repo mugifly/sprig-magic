@@ -181,20 +181,35 @@ sub mode_queue {
 					print "  * $d->{name} - Skip\n";
 				}
 
-				# Initialize the device module
-				my $module_name = $d->{module_name};
-				eval {
-					$d->{module} = SprigMagic::Helper::Device::get_device_module($module_name, $d->{id}, $d->{name}, $d->{connect_port}, $dbh, $tmpdbh);
-				}; if ($@) {
-					print "    * [WARN] $d->{name} - Initialize failed: $@\n";
-					next;
+				my $is_must_init = 1;
+				if (defined $devices->{$d->{id}}) {
+					# Check the failed count
+					if (defined $config->{queue_device_reset_threshold_failed_count} && $devices->{$d->{id}}->{failed_count} < $config->{queue_device_reset_threshold_failed_count}) {
+						$is_must_init = 0;
+					}
 				}
 
-				# Add the device object into the devices hashref
-				$devices->{$d->{id}} = $d;
+				if ($is_must_init) {
+					# Initialize the device module
+					print "  * $d->{name} - Initializing...\n";
+
+					my $module_name = $d->{module_name};
+					eval {
+						$d->{module} = SprigMagic::Helper::Device::get_device_module($module_name, $d->{id}, $d->{name}, $d->{connect_port}, $dbh, $tmpdbh);
+					}; if ($@) {
+						print "    * [WARN] $d->{name} - Initialize failed: $@\n";
+						next;
+					}
+
+					# Initialize the failed count
+					$d->{failed_count} = 0;
+
+					# Add the device object into the devices hashref
+					$devices->{$d->{id}} = $d;
+				}
+				
+				sleep 10;
 			}
-			
-			sleep 10;
 		}
 
 		# Processing the queue
@@ -211,10 +226,12 @@ sub mode_queue {
 			# Check the device and the device module
 			if (!defined $d) {
 				print "    * [WARN] Device is not found.\n";
+				$d->{failed_count}++;
 				next;
 			}
 			if (!defined $d->{module}) {
 				print "    * [WARN] Device module ($d->{module_name}) was not loaded.\n";
+				$d->{failed_count}++;
 				next;
 			}
 			
@@ -228,6 +245,7 @@ sub mode_queue {
 				}
 			}; if ($@) {
 				print "    * [WARN] Error occurred at the device module: $@\n";
+				$d->{failed_count}++;
 				next;
 			}
 			
@@ -264,7 +282,7 @@ sub mode_queue {
 		}
 
 		# Increment or reset the count
-		if (defined $config->{queue_device_reset_interval_sec} && $config->{queue_device_reset_interval_sec} <= $count) {
+		if (defined $config->{queue_device_check_interval_count} && $config->{queue_device_check_interval_count} <= $count) {
 			$count = 0;
 		} else {
 			$count++;
